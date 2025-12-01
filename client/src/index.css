@@ -1,0 +1,5 @@
+/* Using Tailwind via CDN in index.html.
+   Keep any global overrides or custom styles here. */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
