@@ -38,11 +38,12 @@ const PendingActivities = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Pending Approvals</h1>
-        <p className="text-sm text-slate-500">
-          Review each submission and take action. Students are notified instantly.
+    <div className="space-y-8">
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
+        <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Pending approvals</p>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-900">Take action with confidence</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Review each submission and take decisive action. Students are notified instantly.
         </p>
       </div>
 
@@ -58,14 +59,14 @@ const PendingActivities = () => {
                 <button
                   key="approve"
                   onClick={() => handleDecision(activity._id, 'approve')}
-                  className="rounded-2xl bg-accent/10 px-4 py-2 text-sm font-semibold text-accent"
+                  className="rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-100"
                 >
                   Approve
                 </button>,
                 <button
                   key="reject"
                   onClick={() => handleDecision(activity._id, 'reject')}
-                  className="rounded-2xl bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600"
+                  className="rounded-2xl bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
                 >
                   Reject
                 </button>,

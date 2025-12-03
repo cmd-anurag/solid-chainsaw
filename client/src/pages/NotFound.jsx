@@ -1,17 +1,16 @@
 import { Link } from 'react-router-dom';
 
 const NotFound = () => (
-  <div className="flex min-h-screen flex-col items-center justify-center bg-muted text-center">
-    <p className="text-8xl font-black text-primary/20">404</p>
-    <h1 className="mt-6 text-2xl font-bold text-slate-900">Page not found</h1>
-    <p className="mt-2 max-w-md text-slate-500">
-      The page you are looking for might have been removed, renamed, or is temporarily unavailable.
+  <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-950 px-4 text-center text-white">
+    <div className="hero-spark" />
+    <p className="text-9xl font-black text-white/10">404</p>
+    <h1 className="mt-6 text-3xl font-semibold text-white">This page drifted away</h1>
+    <p className="mt-3 max-w-md text-slate-200">
+      The page you were looking for may have been moved or removed. Let’s guide you back to safer
+      waters.
     </p>
-    <Link
-      to="/"
-      className="mt-6 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/30"
-    >
-      Go back home
+    <Link to="/" className="btn-primary mt-8">
+      Back to safety
     </Link>
   </div>
 );

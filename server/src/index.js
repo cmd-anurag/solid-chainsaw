@@ -3,13 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+const { connectDB, disconnectDB } = require('./config/db');
 
 dotenv.config();
 
 const app = express();
-
-connectDB();
 
 app.use(cors());
 app.use(express.json());
@@ -36,5 +34,32 @@ app.use((err, _req, res, _next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+    const gracefulShutdown = async (signal) => {
+      console.log(`${signal} received. Closing HTTP server.`);
+      server.close(async (err) => {
+        if (err) {
+          console.error('Error closing server:', err);
+          process.exit(1);
+        }
+        await disconnectDB();
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  } catch (error) {
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 

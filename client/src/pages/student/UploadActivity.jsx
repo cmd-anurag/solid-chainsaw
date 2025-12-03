@@ -46,10 +46,11 @@ const UploadActivity = () => {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Upload Achievement</h1>
-        <p className="text-sm text-slate-500">
+    <div className="space-y-8">
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Upload achievement</p>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-900">Submit proof in seconds</h1>
+        <p className="mt-2 text-sm text-slate-500">
           Fill in the details and attach proof for faster teacher validation.
         </p>
       </div>
@@ -63,60 +64,60 @@ const UploadActivity = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 rounded-2xl border border-slate-200 bg-white/80 p-6 shadow-sm"
+        className="space-y-5 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5"
       >
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Title</label>
-          <input
-            type="text"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="E.g. Winner - Hackathon 2025"
-            required
-          />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Title</label>
+            <input
+              type="text"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="E.g. Winner - Hackathon 2025"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Category</label>
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            >
+              <option value="event">Event</option>
+              <option value="achievement">Achievement</option>
+              <option value="skill">Skill</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Certificate</label>
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={(event) => setFile(event.target.files[0])}
+              className="mt-2 w-full rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-sm"
+            />
+            <p className="mt-1 text-xs text-slate-400">Accepted formats: PDF, PNG, JPG. Max 5 MB.</p>
+          </div>
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-600">Category</label>
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          >
-            <option value="event">Event</option>
-            <option value="achievement">Achievement</option>
-            <option value="skill">Skill</option>
-          </select>
-        </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Description</label>
+          <label className="text-xs uppercase tracking-[0.3em] text-slate-500">Description</label>
           <textarea
             name="description"
             value={form.description}
             onChange={handleChange}
             rows={4}
-            className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             placeholder="Add relevant details, collaborators, dates, etc."
           />
-        </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Certificate / Proof</label>
-          <input
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            onChange={(event) => setFile(event.target.files[0])}
-            className="mt-1 w-full rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-sm"
-          />
-          <p className="mt-1 text-xs text-slate-500">
-            Accepted formats: PDF, PNG, JPG. Max size 5 MB.
-          </p>
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-primary/50"
+          className="w-full rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-indigo-400"
         >
           {loading ? 'Submitting...' : 'Submit for verification'}
         </button>

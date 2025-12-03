@@ -47,36 +47,36 @@ const TeacherDashboard = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Teacher Overview</h1>
-        <p className="text-sm text-slate-500">
-          Track pending student submissions and approve/reject in seconds.
+    <div className="space-y-10">
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
+        <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Teacher overview</p>
+        <h1 className="mt-3 text-3xl font-semibold text-slate-900">Keep approvals flowing</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Track pending submissions, take action instantly, and celebrate student milestones.
         </p>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         {stats.map((stat) => (
           <StatCard key={stat.title} {...stat} />
         ))}
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <p className="text-lg font-semibold text-slate-900">Most recent uploads</p>
-          <p className="text-sm text-slate-500">
-            Quickly glance at the latest certificates awaiting validation.
-          </p>
-        </div>
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
+        <p className="text-lg font-semibold text-slate-900">Most recent uploads</p>
+        <p className="text-sm text-slate-500">
+          Quickly glance at the latest certificates awaiting validation.
+        </p>
         {pending.length === 0 ? (
-          <EmptyState
-            title="All caught up!"
-            description="No pending applications right now."
-          />
+          <div className="mt-6">
+            <EmptyState title="All caught up!" description="No pending applications right now." />
+          </div>
         ) : (
-          pending.slice(0, 3).map((activity) => (
-            <ActivityCard key={activity._id} activity={activity} />
-          ))
+          <div className="mt-6 space-y-4">
+            {pending.slice(0, 3).map((activity) => (
+              <ActivityCard key={activity._id} activity={activity} />
+            ))}
+          </div>
         )}
       </div>
     </div>

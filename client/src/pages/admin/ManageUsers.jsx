@@ -61,10 +61,10 @@ const ManageUsers = () => {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
-        <p className="text-lg font-semibold text-slate-900">Add new user</p>
-        <p className="text-sm text-slate-500">
+    <div className="grid gap-8 lg:grid-cols-2">
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Add new user</p>
+        <p className="mt-2 text-sm text-slate-500">
           Create student, teacher, or admin accounts for CD-STAR.
         </p>
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -75,7 +75,7 @@ const ManageUsers = () => {
             onChange={handleChange}
             placeholder="Full name"
             required
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
           />
           <input
             type="email"
@@ -84,13 +84,13 @@ const ManageUsers = () => {
             onChange={handleChange}
             placeholder="Email"
             required
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
           />
           <select
             name="role"
             value={form.role}
             onChange={handleChange}
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
           >
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
@@ -103,7 +103,7 @@ const ManageUsers = () => {
               value={form.department}
               onChange={handleChange}
               placeholder="Department"
-              className="rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+              className="rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
             />
             <input
               type="text"
@@ -111,7 +111,7 @@ const ManageUsers = () => {
               value={form.batch}
               onChange={handleChange}
               placeholder="Batch (e.g. 2022)"
-              className="rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+              className="rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </div>
           <input
@@ -120,24 +120,26 @@ const ManageUsers = () => {
             value={form.password}
             onChange={handleChange}
             placeholder="Temporary password (optional)"
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
           />
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-primary/50"
+            className="w-full rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:bg-indigo-400"
           >
             {submitting ? 'Creating...' : 'Create user'}
           </button>
         </form>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
-        <p className="text-lg font-semibold text-slate-900">Existing users</p>
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Existing users</p>
         {users.length === 0 ? (
-          <EmptyState title="No users yet" description="Add your first user to begin." />
+          <div className="mt-4">
+            <EmptyState title="No users yet" description="Add your first user to begin." />
+          </div>
         ) : (
-          <div className="mt-4 space-y-3">
+          <div className="mt-6 space-y-3">
             {users.map((user) => (
               <div
                 key={user._id}
@@ -148,7 +150,7 @@ const ManageUsers = () => {
                   <p className="text-slate-500">{user.email}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     {user.role}
                   </span>
                   <button

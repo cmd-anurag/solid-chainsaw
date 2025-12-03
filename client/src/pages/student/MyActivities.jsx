@@ -38,10 +38,11 @@ const MyActivities = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Activities</h1>
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">My activities</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Search and filter instantly</h1>
           <p className="text-sm text-slate-500">
             Filter by category or status to find the right submission quickly.
           </p>
@@ -51,7 +52,7 @@ const MyActivities = () => {
             name="category"
             value={filters.category}
             onChange={handleFilterChange}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
           >
             <option value="">All categories</option>
             <option value="event">Events</option>
@@ -62,7 +63,7 @@ const MyActivities = () => {
             name="status"
             value={filters.status}
             onChange={handleFilterChange}
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
           >
             <option value="">All status</option>
             <option value="pending">Pending</option>
@@ -79,7 +80,7 @@ const MyActivities = () => {
           action={
             <button
               onClick={() => setFilters({ category: '', status: '' })}
-              className="rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary"
+              className="rounded-2xl bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-600"
             >
               Clear filters
             </button>
