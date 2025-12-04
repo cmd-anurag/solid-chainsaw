@@ -67,7 +67,7 @@ const ManageUsers = () => {
         <p className="mt-2 text-sm text-slate-500">
           Create student, teacher, or admin accounts for CD-STAR.
         </p>
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-6 text-black space-y-4" onSubmit={handleSubmit}>
           <input
             type="text"
             name="name"

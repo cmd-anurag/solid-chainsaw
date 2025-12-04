@@ -7,9 +7,15 @@ const getPendingActivities = async (req, res) => {
       query.category = req.query.category;
     }
 
-    const activities = await Activity.find(query)
-      .populate('student', 'name department batch')
+    let activities = await Activity.find(query)
+      .populate({
+      path: 'student',
+      select: 'name department batch',
+      match: { department: req.user.department }
+      })
       .sort({ createdAt: -1 });
+
+    activities = activities.filter(a => a.student);
 
     res.json(activities);
   } catch (error) {
