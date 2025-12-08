@@ -25,6 +25,9 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/teacher', require('./routes/teacherRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api', require('./routes/academicRecords'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 app.use((err, _req, res, _next) => {
   console.error('API error:', err.message);

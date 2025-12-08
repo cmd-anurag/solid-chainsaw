@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema(
     },
     department: { type: String },
     batch: { type: String },
+    rollNumber: { type: String, index: true },
+    permissions: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );

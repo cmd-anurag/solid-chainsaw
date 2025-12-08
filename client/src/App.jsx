@@ -6,6 +6,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import Analytics from './pages/admin/Analytics';
 import ManageUsers from './pages/admin/ManageUsers';
 import StudentDashboard from './pages/student/StudentDashboard';
 import MyActivities from './pages/student/MyActivities';
@@ -38,6 +39,7 @@ const App = () => (
     <Route element={<ProtectedRoute roles={['admin']} />}>
       <Route element={<DashboardLayout />}>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/analytics" element={<Analytics />} />
         <Route path="/admin/users" element={<ManageUsers />} />
       </Route>
     </Route>

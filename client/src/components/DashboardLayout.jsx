@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import NotificationBell from './Notifications/NotificationBell';
 
 const menuConfig = {
   student: [
@@ -14,6 +15,7 @@ const menuConfig = {
   ],
   admin: [
     { label: 'Overview', to: '/admin' },
+    { label: 'Analytics', to: '/admin/analytics' },
     { label: 'Manage Users', to: '/admin/users' },
   ],
 };
@@ -90,6 +92,7 @@ const DashboardLayout = () => {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              <NotificationBell />
               <select
                 onChange={(event) => {
                   const path = event.target.value;

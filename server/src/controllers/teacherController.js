@@ -1,4 +1,6 @@
 const Activity = require('../models/Activity');
+const TeacherAssignment = require('../models/TeacherAssignment');
+const User = require('../models/User');
 
 const getPendingActivities = async (req, res) => {
   try {
@@ -43,5 +45,35 @@ const updateStatus = async (req, res, status) => {
 const approveActivity = (req, res) => updateStatus(req, res, 'approved');
 const rejectActivity = (req, res) => updateStatus(req, res, 'rejected');
 
-module.exports = { getPendingActivities, approveActivity, rejectActivity };
+/**
+ * GET /api/teachers/:id/students
+ * Get students assigned to a teacher
+ */
+const getAssignedStudents = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if teacher exists
+    const teacher = await User.findById(id);
+    if (!teacher || teacher.role !== 'teacher') {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+
+    // Get teacher assignment
+    const assignment = await TeacherAssignment.findOne({ teacher: id }).populate(
+      'studentIds',
+      'name email department batch rollNumber'
+    );
+
+    if (!assignment || !assignment.studentIds || assignment.studentIds.length === 0) {
+      return res.json([]);
+    }
+
+    res.json(assignment.studentIds);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getPendingActivities, approveActivity, rejectActivity, getAssignedStudents };
 
