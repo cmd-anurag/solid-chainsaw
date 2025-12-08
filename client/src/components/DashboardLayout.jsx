@@ -5,12 +5,14 @@ import NotificationBell from './Notifications/NotificationBell';
 const menuConfig = {
   student: [
     { label: 'Overview', to: '/student' },
+    { label: 'My Classrooms', to: '/student/classrooms' },
     { label: 'Upload Activity', to: '/student/upload' },
     { label: 'My Activities', to: '/student/activities' },
     { label: 'Profile', to: '/student/profile' },
   ],
   teacher: [
     { label: 'Overview', to: '/teacher' },
+    { label: 'My Classrooms', to: '/teacher' },
     { label: 'Pending Approvals', to: '/teacher/pending' },
   ],
   admin: [
@@ -53,9 +55,10 @@ const DashboardLayout = () => {
           <nav className="flex-1">
             <ul className="space-y-1">
               {menu.map((item) => (
-                <li key={item.to}>
+                <li key={`${item.to}-${item.label}`}>
                   <NavLink
                     to={item.to}
+                    end={item.to === '/student' || item.to === '/teacher'}
                     className={({ isActive }) =>
                       `flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                         isActive
@@ -107,7 +110,7 @@ const DashboardLayout = () => {
                   Quick jump
                 </option>
                 {menu.map((item) => (
-                  <option key={item.to} value={item.to} className="text-slate-800">
+                  <option key={`${item.to}-${item.label}`} value={item.to} className="text-slate-800">
                     {item.label}
                   </option>
                 ))}

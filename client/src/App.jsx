@@ -12,8 +12,13 @@ import StudentDashboard from './pages/student/StudentDashboard';
 import MyActivities from './pages/student/MyActivities';
 import Profile from './pages/student/Profile';
 import UploadActivity from './pages/student/UploadActivity';
+import StudentClassrooms from './pages/student/StudentClassrooms';
+import StudentClassroomView from './pages/student/StudentClassroomView';
+import StudentAssignmentView from './pages/student/StudentAssignmentView';
 import PendingActivities from './pages/teacher/PendingActivities';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import ClassroomView from './pages/teacher/ClassroomView';
+import AssignmentView from './pages/teacher/AssignmentView';
 
 const App = () => (
   <Routes>
@@ -23,9 +28,12 @@ const App = () => (
     <Route element={<ProtectedRoute roles={['student']} />}>
       <Route element={<DashboardLayout />}>
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/student/classrooms" element={<StudentClassrooms />} />
         <Route path="/student/upload" element={<UploadActivity />} />
         <Route path="/student/activities" element={<MyActivities />} />
         <Route path="/student/profile" element={<Profile />} />
+        <Route path="/student/classroom/:classroomId" element={<StudentClassroomView />} />
+        <Route path="/student/assignment/:assignmentId" element={<StudentAssignmentView />} />
       </Route>
     </Route>
 
@@ -33,6 +41,8 @@ const App = () => (
       <Route element={<DashboardLayout />}>
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/teacher/pending" element={<PendingActivities />} />
+        <Route path="/teacher/classroom/:classroomId" element={<ClassroomView />} />
+        <Route path="/teacher/assignment/:assignmentId" element={<AssignmentView />} />
       </Route>
     </Route>
 

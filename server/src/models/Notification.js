@@ -13,7 +13,7 @@ const notificationSchema = new mongoose.Schema(
     message: { type: String, required: true },
     type: {
       type: String,
-      enum: ['info', 'success', 'warning', 'error', 'activity', 'academic'],
+      enum: ['info', 'success', 'warning', 'error', 'activity', 'academic', 'submission', 'grading'],
       default: 'info',
     },
     link: { type: String },

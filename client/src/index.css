@@ -32,6 +32,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Form fields: ensure readable dark text on light inputs across themes */
+input,
+textarea,
+select,
+option {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
 #root {
   min-height: 100vh;
 }
