@@ -19,6 +19,7 @@ import PendingActivities from './pages/teacher/PendingActivities';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import ClassroomView from './pages/teacher/ClassroomView';
 import AssignmentView from './pages/teacher/AssignmentView';
+import StudentProfileView from './pages/teacher/StudentProfileView';
 
 const App = () => (
   <Routes>
@@ -43,6 +44,7 @@ const App = () => (
         <Route path="/teacher/pending" element={<PendingActivities />} />
         <Route path="/teacher/classroom/:classroomId" element={<ClassroomView />} />
         <Route path="/teacher/assignment/:assignmentId" element={<AssignmentView />} />
+        <Route path="/teacher/student/:studentId" element={<StudentProfileView />} />
       </Route>
     </Route>
 

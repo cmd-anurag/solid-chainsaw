@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { useNavigate, useParams } from 'react-router-dom';
 import EmptyState from '../../components/EmptyState';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import SectionCard from '../../components/layout/SectionCard';
+import TabNav from '../../components/layout/TabNav';
 import api from '../../services/api';
+
+const daysUntil = (date) => Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
 
 const StudentClassroomView = () => {
   const { classroomId } = useParams();
@@ -21,12 +25,12 @@ const StudentClassroomView = () => {
           api.get(`/assignments/classroom/${classroomId}`),
           api.get(`/submissions/classroom/${classroomId}`),
         ]);
+
         setClassroom(classroomRes.data);
-        setAssignments(assignmentsRes.data.filter(a => a.status === 'published'));
-        // Only include actual submitted submissions, not drafts (includes 'submitted' and 'returned' status)
-        setSubmissions(submissionsRes.data.filter(s => s.status === 'submitted' || s.status === 'returned'));
-        console.log('Loaded submissions:', submissionsRes.data.filter(s => s.status === 'submitted' || s.status === 'returned'));
-        console.log('Loaded assignments:', assignmentsRes.data);
+        setAssignments(assignmentsRes.data.filter((a) => a.status === 'published'));
+        setSubmissions(
+          submissionsRes.data.filter((s) => s.status === 'submitted' || s.status === 'returned')
+        );
       } catch (error) {
         console.error('Error loading classroom:', error);
         alert('Failed to load classroom');
@@ -34,6 +38,7 @@ const StudentClassroomView = () => {
         setLoading(false);
       }
     };
+
     load();
   }, [classroomId]);
 
@@ -50,184 +55,200 @@ const StudentClassroomView = () => {
         >
           ← Back to Dashboard
         </button>
-        <EmptyState title="Classroom not found" description="The classroom you're looking for doesn't exist." />
+        <EmptyState
+          title="Classroom not found"
+          description="The classroom you're looking for doesn't exist."
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <button
-          onClick={() => navigate('/student')}
-          className="text-blue-600 hover:text-blue-700 font-medium mb-3"
-        >
-          ← Back to Classrooms
-        </button>
-        <h1 className="text-3xl font-semibold text-slate-900">{classroom.name}</h1>
-        <p className="text-slate-600 mt-1">{classroom.description}</p>
-      </div>
+      <ClassroomHeader classroom={classroom} onBack={() => navigate('/student')} />
 
-      {/* Classroom Info */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-          <p className="text-sm text-slate-600">Section</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{classroom.section}</p>
-        </div>
-        <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-          <p className="text-sm text-slate-600">Department</p>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{classroom.department}</p>
-        </div>
+        <SectionCard subtitle="Section" title={classroom.section} />
+        <SectionCard subtitle="Department" title={classroom.department} />
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab('assignments')}
-          className={`px-4 py-3 font-medium border-b-2 transition ${
-            activeTab === 'assignments'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Assignments
-        </button>
-        <button
-          onClick={() => setActiveTab('my-submissions')}
-          className={`px-4 py-3 font-medium border-b-2 transition ${
-            activeTab === 'my-submissions'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          My Submissions
-        </button>
-      </div>
+      <TabNav
+        tabs={[
+          { id: 'assignments', label: 'Assignments' },
+          { id: 'my-submissions', label: 'My Submissions' },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
 
-      {/* Assignments Tab */}
       {activeTab === 'assignments' && (
-        <div className="space-y-4">
-          {assignments.length === 0 ? (
-            <div className="rounded-3xl border border-slate-200 bg-white/90 p-12 shadow-xl shadow-slate-900/5">
-              <EmptyState 
-                title="No assignments yet" 
-                description="Check back later for assignments from your instructor." 
-              />
-            </div>
-          ) : (
-            assignments.map((assignment) => {
-              const daysUntilDue = Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24));
-              const submission = submissions.find((s) => {
-                const submissionAssignmentId = s.assignment?._id || s.assignment;
-                const match = submissionAssignmentId?.toString() === assignment._id?.toString();
-                if (match) {
-                  console.log('Found submission for assignment:', assignment.title, s);
-                }
-                return match;
-              });
-              
-              return (
-                <div
-                  key={assignment._id}
-                  className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5 hover:shadow-2xl transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-slate-900">{assignment.title}</h3>
-                      <p className="text-slate-600 mt-1">{assignment.description}</p>
-                      <div className="flex gap-4 mt-3 text-sm text-slate-600">
-                        <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-                        <span className={daysUntilDue < 0 ? 'text-red-600 font-bold' : 'text-slate-600'}>
-                          {daysUntilDue > 0 ? `${daysUntilDue} days left` : 'Overdue'}
-                        </span>
-                        <span>Points: {assignment.maxPoints}</span>
-                      </div>
-                      {submission?.grade !== undefined && (
-                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                          <p className="text-sm font-semibold text-green-900">
-                            Your Grade: {submission.grade}/{submission.maxPoints} ({Math.round((submission.grade / submission.maxPoints) * 100)}%)
-                          </p>
-                          {submission.feedback && (
-                            <p className="text-sm text-green-800 mt-1">Feedback: {submission.feedback}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => navigate(`/student/assignment/${assignment._id}`)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium whitespace-nowrap ml-4"
-                    >
-                      {submission ? 'View' : 'Submit'}
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+        <AssignmentsTab
+          assignments={assignments}
+          submissions={submissions}
+          onOpen={(id) => navigate(`/student/assignment/${id}`)}
+        />
       )}
 
-      {/* My Submissions Tab */}
       {activeTab === 'my-submissions' && (
-        <div className="space-y-4">
-          {submissions.length === 0 ? (
-            <div className="rounded-3xl border border-slate-200 bg-white/90 p-12 shadow-xl shadow-slate-900/5">
-              <EmptyState 
-                title="No submissions yet" 
-                description="Submit your first assignment to see it here." 
-              />
-            </div>
-          ) : (
-            submissions.map((submission) => (
-              <div
-                key={submission._id}
-                className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5"
-              >
-                <h3 className="text-lg font-semibold text-slate-900">{submission.assignment?.title}</h3>
-                <div className="mt-2 space-y-2 text-sm text-slate-600">
-                  <p>
-                    Submitted:{' '}
-                    {submission.submittedAt
-                      ? new Date(submission.submittedAt).toLocaleDateString()
-                      : 'Pending timestamp'}
-                  </p>
-                  <p>Status: 
-                    <span className={`ml-2 inline-block px-3 py-1 rounded text-xs font-medium ${
-                      submission.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
-                      submission.status === 'returned' ? 'bg-blue-100 text-blue-800' :
-                      submission.status === 'graded' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {submission.status.toUpperCase()}
-                    </span>
-                  </p>
-                  {submission.isLate && (
-                    <p className="text-red-600 font-semibold">Late Submission</p>
-                  )}
-                </div>
-                {submission.grade !== undefined && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm font-semibold text-green-900">
-                      Grade: {submission.grade}/{submission.maxPoints} ({Math.round((submission.grade / submission.maxPoints) * 100)}%)
-                    </p>
-                    {submission.feedback && (
-                      <p className="text-sm text-green-800 mt-2">Feedback: {submission.feedback}</p>
-                    )}
-                  </div>
-                )}
-                <button
-                  onClick={() => navigate(`/student/assignment/${submission.assignment?._id}`)}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
-                >
-                  View Assignment
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+        <SubmissionsTab
+          submissions={submissions}
+          onOpen={(id) => navigate(`/student/assignment/${id}`)}
+        />
       )}
     </div>
+  );
+};
+
+const ClassroomHeader = ({ classroom, onBack }) => (
+  <div>
+    <button onClick={onBack} className="mb-3 text-blue-600 hover:text-blue-700 font-medium">
+      ← Back to Classrooms
+    </button>
+    <h1 className="text-3xl font-semibold text-slate-900">{classroom.name}</h1>
+    <p className="mt-1 text-slate-600">{classroom.description}</p>
+  </div>
+);
+
+const AssignmentsTab = ({ assignments, submissions, onOpen }) => {
+  if (assignments.length === 0) {
+    return (
+      <SectionCard padded>
+        <EmptyState
+          title="No assignments yet"
+          description="Check back later for assignments from your instructor."
+        />
+      </SectionCard>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {assignments.map((assignment) => {
+        const submission = submissions.find((s) => {
+          const submissionAssignmentId = s.assignment?._id || s.assignment;
+          return submissionAssignmentId?.toString() === assignment._id?.toString();
+        });
+
+        return (
+          <AssignmentCard
+            key={assignment._id}
+            assignment={assignment}
+            submission={submission}
+            onOpen={onOpen}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+const AssignmentCard = ({ assignment, submission, onOpen }) => {
+  const dueInDays = daysUntil(assignment.dueDate);
+  const dueLabel = dueInDays > 0 ? `${dueInDays} days left` : 'Overdue';
+  const dueClass = dueInDays < 0 ? 'text-red-600 font-bold' : 'text-slate-600';
+
+  return (
+    <SectionCard className="hover:shadow-2xl transition" padded>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-slate-900">{assignment.title}</h3>
+          <p className="mt-1 text-slate-600">{assignment.description}</p>
+          <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-600">
+            <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+            <span className={dueClass}>{dueLabel}</span>
+            <span>Points: {assignment.maxPoints}</span>
+          </div>
+          {submission?.grade !== undefined && (
+            <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
+              <p className="text-sm font-semibold text-green-900">
+                Your Grade: {submission.grade}/{submission.maxPoints} ({Math.round((submission.grade / submission.maxPoints) * 100)}%)
+              </p>
+              {submission.feedback && (
+                <p className="mt-1 text-sm text-green-800">Feedback: {submission.feedback}</p>
+              )}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => onOpen(assignment._id)}
+          className="ml-4 whitespace-nowrap rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+        >
+          {submission ? 'View' : 'Submit'}
+        </button>
+      </div>
+    </SectionCard>
+  );
+};
+
+const SubmissionsTab = ({ submissions, onOpen }) => {
+  if (submissions.length === 0) {
+    return (
+      <SectionCard padded>
+        <EmptyState
+          title="No submissions yet"
+          description="Submit your first assignment to see it here."
+        />
+      </SectionCard>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {submissions.map((submission) => (
+        <SubmissionCard key={submission._id} submission={submission} onOpen={onOpen} />
+      ))}
+    </div>
+  );
+};
+
+const SubmissionCard = ({ submission, onOpen }) => (
+  <SectionCard>
+    <h3 className="text-lg font-semibold text-slate-900">{submission.assignment?.title}</h3>
+    <div className="mt-2 space-y-2 text-sm text-slate-600">
+      <p>
+        Submitted:{' '}
+        {submission.submittedAt
+          ? new Date(submission.submittedAt).toLocaleDateString()
+          : 'Pending timestamp'}
+      </p>
+      <p>
+        Status:
+        <StatusBadge status={submission.status} />
+      </p>
+      {submission.isLate && <p className="font-semibold text-red-600">Late Submission</p>}
+    </div>
+    {submission.grade !== undefined && (
+      <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+        <p className="text-sm font-semibold text-green-900">
+          Grade: {submission.grade}/{submission.maxPoints} ({Math.round((submission.grade / submission.maxPoints) * 100)}%)
+        </p>
+        {submission.feedback && (
+          <p className="mt-2 text-sm text-green-800">Feedback: {submission.feedback}</p>
+        )}
+      </div>
+    )}
+    <button
+      onClick={() => onOpen(submission.assignment?._id)}
+      className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      View Assignment
+    </button>
+  </SectionCard>
+);
+
+const StatusBadge = ({ status }) => {
+  const styles = {
+    submitted: 'bg-yellow-100 text-yellow-800',
+    returned: 'bg-blue-100 text-blue-800',
+    graded: 'bg-green-100 text-green-800',
+  };
+
+  const style = styles[status] || 'bg-gray-100 text-gray-800';
+
+  return (
+    <span className={`ml-2 inline-block rounded px-3 py-1 text-xs font-medium ${style}`}>
+      {status?.toUpperCase()}
+    </span>
   );
 };
 
