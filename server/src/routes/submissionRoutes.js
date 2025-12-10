@@ -9,11 +9,12 @@ const {
   getGradingSummary
 } = require('../controllers/submissionController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 router.use(protect);
 
 // Student routes
-router.post('/', authorizeRoles('student'), submitAssignment);
+router.post('/', authorizeRoles('student'), upload.single('file'), submitAssignment);
 router.get('/classroom/:classroomId', authorizeRoles('student'), getStudentSubmissions);
 
 // Teacher routes

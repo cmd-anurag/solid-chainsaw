@@ -45,6 +45,16 @@ exports.submitAssignment = async (req, res) => {
       submission.submittedAt = new Date();
     }
 
+    // Handle optional file upload
+    if (req.file) {
+      const fileUrl = `/uploads/${req.file.filename}`;
+      submission.attachments = [{
+        filename: req.file.originalname,
+        url: fileUrl,
+        uploadedAt: new Date()
+      }];
+    }
+
     // Check if late
     if (new Date() > assignment.dueDate) {
       submission.isLate = true;

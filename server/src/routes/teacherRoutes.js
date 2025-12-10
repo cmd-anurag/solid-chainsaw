@@ -4,6 +4,8 @@ const {
   approveActivity,
   rejectActivity,
   getAssignedStudents,
+  getStudentProfile,
+  getStudentAssignmentStats,
 } = require('../controllers/teacherController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 
@@ -14,6 +16,8 @@ router.get('/activities/pending', getPendingActivities);
 router.put('/activity/approve/:id', approveActivity);
 router.put('/activity/reject/:id', rejectActivity);
 router.get('/:id/students', getAssignedStudents);
+router.get('/student/:studentId/profile', getStudentProfile);
+router.get('/student/:studentId/assignment-stats', getStudentAssignmentStats);
 
 module.exports = router;
 

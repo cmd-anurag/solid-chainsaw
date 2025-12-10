@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import LoadingSpinner from '../../components/LoadingSpinner';
+import { useNavigate, useParams } from 'react-router-dom';
 import EmptyState from '../../components/EmptyState';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import SectionCard from '../../components/layout/SectionCard';
 import api from '../../services/api';
+
+const daysUntil = (date) => Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
 
 const ClassroomView = () => {
   const { classroomId } = useParams();
@@ -36,28 +39,29 @@ const ClassroomView = () => {
         setLoading(false);
       }
     };
+
     load();
   }, [classroomId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: name === 'maxPoints' ? parseInt(value) : value }));
+    setFormData((prev) => ({ ...prev, [name]: name === 'maxPoints' ? parseInt(value, 10) : value }));
+  };
+
+  const refreshAssignments = async () => {
+    const assignmentsRes = await api.get(`/assignments/classroom/${classroomId}`);
+    setAssignments(assignmentsRes.data);
   };
 
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.post('/assignments', {
-        ...formData,
-        classroomId,
-      });
+      await api.post('/assignments', { ...formData, classroomId });
       alert('Assignment created successfully!');
       setFormData({ title: '', description: '', instructions: '', dueDate: '', maxPoints: 100 });
       setShowCreateAssignment(false);
-      // Reload assignments
-      const assignmentsRes = await api.get(`/assignments/classroom/${classroomId}`);
-      setAssignments(assignmentsRes.data);
+      await refreshAssignments();
     } catch (error) {
       alert('Error creating assignment: ' + error.response?.data?.error);
     } finally {
@@ -69,8 +73,7 @@ const ClassroomView = () => {
     try {
       await api.put(`/assignments/${assignmentId}/publish`);
       alert('Assignment published successfully!');
-      const assignmentsRes = await api.get(`/assignments/classroom/${classroomId}`);
-      setAssignments(assignmentsRes.data);
+      await refreshAssignments();
     } catch (error) {
       alert('Error publishing assignment: ' + error.response?.data?.error);
     }
@@ -81,8 +84,7 @@ const ClassroomView = () => {
     try {
       await api.delete(`/assignments/${assignmentId}`);
       alert('Assignment deleted successfully!');
-      const assignmentsRes = await api.get(`/assignments/classroom/${classroomId}`);
-      setAssignments(assignmentsRes.data);
+      await refreshAssignments();
     } catch (error) {
       alert('Error deleting assignment: ' + error.response?.data?.error);
     }
@@ -95,222 +97,272 @@ const ClassroomView = () => {
   if (!classroom) {
     return (
       <div className="space-y-6">
-        <button
-          onClick={() => navigate('/teacher')}
-          className="text-blue-600 hover:text-blue-700 font-medium"
-        >
+        <button onClick={() => navigate('/teacher')} className="text-blue-600 hover:text-blue-700 font-medium">
           ← Back to Classrooms
         </button>
-        <EmptyState title="Classroom not found" description="The classroom you're looking for doesn't exist." />
+        <EmptyState
+          title="Classroom not found"
+          description="The classroom you're looking for doesn't exist."
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <button
-            onClick={() => navigate('/teacher')}
-            className="text-blue-600 hover:text-blue-700 font-medium mb-3"
-          >
-            ← Back to Classrooms
-          </button>
-          <h1 className="text-3xl font-semibold text-slate-900">{classroom.name}</h1>
-          <p className="text-slate-600 mt-1">{classroom.description}</p>
-        </div>
-      </div>
+      <ClassroomHeader classroom={classroom} onBack={() => navigate('/teacher')} />
 
-      {/* Classroom Info */}
       <div className="grid gap-6 md:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-          <p className="text-sm text-slate-600">Classroom Code</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1 font-mono">{classroom.code}</p>
-          <p className="text-xs text-slate-500 mt-2">Share with students to invite them</p>
-        </div>
-        <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-          <p className="text-sm text-slate-600">Enrolled Students</p>
-          <p className="text-3xl font-bold text-slate-900 mt-1">{classroom.students?.length || 0}</p>
-        </div>
-        <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-          <p className="text-sm text-slate-600">Assignments</p>
-          <p className="text-3xl font-bold text-slate-900 mt-1">{assignments.length}</p>
-        </div>
+        <SectionCard subtitle="Classroom Code">
+          <p className="mt-1 font-mono text-2xl font-bold text-blue-600">{classroom.code}</p>
+          <p className="mt-2 text-xs text-slate-500">Share with students to invite them</p>
+        </SectionCard>
+        <SectionCard subtitle="Enrolled Students" title={classroom.students?.length || 0} />
+        <SectionCard subtitle="Assignments" title={assignments.length} />
       </div>
 
-      {/* Students List */}
-      <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Enrolled Students ({classroom.students?.length || 0})</h2>
-        {classroom.students?.length === 0 ? (
-          <EmptyState title="No students yet" description="Students will appear here once they join using the classroom code." />
-        ) : (
-          <div className="grid gap-3">
-            {classroom.students.map((student) => (
-              <div key={student._id} className="p-4 border border-slate-200 rounded-lg bg-slate-50">
+      <StudentsList students={classroom.students} />
+
+      <AssignmentsSection
+        assignments={assignments}
+        showCreateAssignment={showCreateAssignment}
+        setShowCreateAssignment={setShowCreateAssignment}
+        formData={formData}
+        onChange={handleChange}
+        onCreate={handleCreateAssignment}
+        onPublish={handlePublishAssignment}
+        onDelete={handleDeleteAssignment}
+        isSubmitting={isSubmitting}
+        navigate={navigate}
+      />
+    </div>
+  );
+};
+
+const ClassroomHeader = ({ classroom, onBack }) => (
+  <div className="flex items-start justify-between">
+    <div>
+      <button onClick={onBack} className="mb-3 text-blue-600 hover:text-blue-700 font-medium">
+        ← Back to Classrooms
+      </button>
+      <h1 className="text-3xl font-semibold text-slate-900">{classroom.name}</h1>
+      <p className="mt-1 text-slate-600">{classroom.description}</p>
+    </div>
+  </div>
+);
+
+const StudentsList = ({ students = [] }) => {
+  const navigate = useNavigate();
+  
+  return (
+    <SectionCard title={`Enrolled Students (${students.length || 0})`}>
+      {students.length === 0 ? (
+        <EmptyState
+          title="No students yet"
+          description="Students will appear here once they join using the classroom code."
+        />
+      ) : (
+        <div className="grid gap-3">
+          {students.map((student) => (
+            <div key={student._id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 hover:bg-slate-100 transition">
+              <div className="flex-1">
                 <p className="font-medium text-slate-900">{student.name}</p>
                 <p className="text-sm text-slate-600">{student.email}</p>
                 {student.rollNumber && <p className="text-sm text-slate-500">Roll: {student.rollNumber}</p>}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Assignments Section */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold text-slate-900">Assignments</h2>
-          <button
-            onClick={() => setShowCreateAssignment(!showCreateAssignment)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            {showCreateAssignment ? 'Cancel' : '+ New Assignment'}
-          </button>
-        </div>
-
-        {showCreateAssignment && (
-          <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5">
-            <form onSubmit={handleCreateAssignment} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Assignment Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="e.g., Midterm Project"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="What should students do?"
-                  rows="3"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Instructions</label>
-                <textarea
-                  name="instructions"
-                  value={formData.instructions}
-                  onChange={handleChange}
-                  placeholder="Detailed instructions (optional)"
-                  rows="2"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
-                  <input
-                    type="datetime-local"
-                    name="dueDate"
-                    value={formData.dueDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Max Points</label>
-                  <input
-                    type="number"
-                    name="maxPoints"
-                    value={formData.maxPoints}
-                    onChange={handleChange}
-                    min="1"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-400"
+                onClick={() => navigate(`/teacher/student/${student._id}`)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
-                {isSubmitting ? 'Creating...' : 'Create Assignment'}
+                View Profile
               </button>
-            </form>
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
+};
 
-        {assignments.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200 bg-white/90 p-12 shadow-xl shadow-slate-900/5">
-            <EmptyState 
-              title="No assignments yet" 
-              description="Create your first assignment to get students started." 
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {assignments.map((assignment) => {
-              const daysUntilDue = Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24));
-              return (
-                <div
-                  key={assignment._id}
-                  className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5 hover:shadow-2xl transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-slate-900">{assignment.title}</h3>
-                      <p className="text-slate-600 mt-1">{assignment.description}</p>
-                      <div className="flex gap-4 mt-3 text-sm text-slate-600">
-                        <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-                        <span className={daysUntilDue < 0 ? 'text-red-600 font-bold' : 'text-slate-600'}>
-                          {daysUntilDue > 0 ? `${daysUntilDue} days left` : 'Overdue'}
-                        </span>
-                        <span>Points: {assignment.maxPoints}</span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          assignment.status === 'published' ? 'bg-green-100 text-green-800' :
-                          assignment.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {assignment.status.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        onClick={() => navigate(`/teacher/assignment/${assignment._id}`)}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap"
-                      >
-                        {assignment.status === 'published' ? 'View & Grade' : 'Edit'}
-                      </button>
-                      {assignment.status === 'draft' && (
-                        <>
-                          <button
-                            onClick={() => handlePublishAssignment(assignment._id)}
-                            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                          >
-                            Publish
-                          </button>
-                          <button
-                            onClick={() => handleDeleteAssignment(assignment._id)}
-                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+const AssignmentsSection = ({
+  assignments,
+  showCreateAssignment,
+  setShowCreateAssignment,
+  formData,
+  onChange,
+  onCreate,
+  onPublish,
+  onDelete,
+  isSubmitting,
+  navigate,
+}) => (
+  <div className="space-y-4">
+    <div className="flex items-center justify-between">
+      <h2 className="text-2xl font-semibold text-slate-900">Assignments</h2>
+      <button
+        onClick={() => setShowCreateAssignment((prev) => !prev)}
+        className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+      >
+        {showCreateAssignment ? 'Cancel' : '+ New Assignment'}
+      </button>
+    </div>
+
+    {showCreateAssignment && (
+      <SectionCard>
+        <AssignmentForm formData={formData} onChange={onChange} onSubmit={onCreate} isSubmitting={isSubmitting} />
+      </SectionCard>
+    )}
+
+    {assignments.length === 0 ? (
+      <SectionCard padded>
+        <EmptyState
+          title="No assignments yet"
+          description="Create your first assignment to get students started."
+        />
+      </SectionCard>
+    ) : (
+      <div className="space-y-4">
+        {assignments.map((assignment) => (
+          <AssignmentCard
+            key={assignment._id}
+            assignment={assignment}
+            onPublish={onPublish}
+            onDelete={onDelete}
+            navigate={navigate}
+          />
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+const AssignmentForm = ({ formData, onChange, onSubmit, isSubmitting }) => (
+  <form onSubmit={onSubmit} className="space-y-4">
+    <div>
+      <label className="mb-1 block text-sm font-medium text-slate-700">Assignment Title</label>
+      <input
+        type="text"
+        name="title"
+        value={formData.title}
+        onChange={onChange}
+        placeholder="e.g., Midterm Project"
+        className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+    <div>
+      <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
+      <textarea
+        name="description"
+        value={formData.description}
+        onChange={onChange}
+        placeholder="What should students do?"
+        rows="3"
+        className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+    <div>
+      <label className="mb-1 block text-sm font-medium text-slate-700">Instructions</label>
+      <textarea
+        name="instructions"
+        value={formData.instructions}
+        onChange={onChange}
+        placeholder="Detailed instructions (optional)"
+        rows="2"
+        className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Due Date</label>
+        <input
+          type="datetime-local"
+          name="dueDate"
+          value={formData.dueDate}
+          onChange={onChange}
+          className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">Max Points</label>
+        <input
+          type="number"
+          name="maxPoints"
+          value={formData.maxPoints}
+          onChange={onChange}
+          min="1"
+          className="w-full rounded-lg border border-slate-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+          required
+        />
       </div>
     </div>
+    <button
+      type="submit"
+      disabled={isSubmitting}
+      className="w-full rounded-lg bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:bg-gray-400"
+    >
+      {isSubmitting ? 'Creating...' : 'Create Assignment'}
+    </button>
+  </form>
+);
+
+const AssignmentCard = ({ assignment, onPublish, onDelete, navigate }) => {
+  const dueInDays = daysUntil(assignment.dueDate);
+  const dueLabel = dueInDays > 0 ? `${dueInDays} days left` : 'Overdue';
+  const dueClass = dueInDays < 0 ? 'text-red-600 font-bold' : 'text-slate-600';
+
+  return (
+    <SectionCard className="hover:shadow-2xl transition">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-slate-900">{assignment.title}</h3>
+          <p className="mt-1 text-slate-600">{assignment.description}</p>
+          <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-600">
+            <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+            <span className={dueClass}>{dueLabel}</span>
+            <span>Points: {assignment.maxPoints}</span>
+            <StatusPill status={assignment.status} />
+          </div>
+        </div>
+        <div className="ml-4 flex gap-2">
+          <button
+            onClick={() => navigate(`/teacher/assignment/${assignment._id}`)}
+            className="whitespace-nowrap rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {assignment.status === 'published' ? 'View & Grade' : 'Edit'}
+          </button>
+          {assignment.status === 'draft' && (
+            <>
+              <button
+                onClick={() => onPublish(assignment._id)}
+                className="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+              >
+                Publish
+              </button>
+              <button
+                onClick={() => onDelete(assignment._id)}
+                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </SectionCard>
   );
+};
+
+const StatusPill = ({ status }) => {
+  const styles = {
+    published: 'bg-green-100 text-green-800',
+    draft: 'bg-yellow-100 text-yellow-800',
+  };
+  const style = styles[status] || 'bg-gray-100 text-gray-800';
+
+  return <span className={`rounded px-2 py-1 text-xs font-medium ${style}`}>{status.toUpperCase()}</span>;
 };
 
 export default ClassroomView;
