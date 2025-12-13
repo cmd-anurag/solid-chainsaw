@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Analytics from './pages/admin/Analytics';
 import ManageUsers from './pages/admin/ManageUsers';
+import ManageClassrooms from './pages/admin/ManageClassrooms';
 import StudentDashboard from './pages/student/StudentDashboard';
 import MyActivities from './pages/student/MyActivities';
 import Profile from './pages/student/Profile';
@@ -53,6 +54,7 @@ const App = () => (
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/analytics" element={<Analytics />} />
         <Route path="/admin/users" element={<ManageUsers />} />
+        <Route path="/admin/classrooms" element={<ManageClassrooms />} />
       </Route>
     </Route>
 
