@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../models/User');
 const AcademicRecord = require('../models/AcademicRecord');
+const Classroom = require('../models/Classroom');
 const { calcCGPA } = require('../utils/grades');
 
 const allowedRoles = ['student', 'teacher', 'admin'];
@@ -183,5 +185,195 @@ const setPermissions = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, addUser, deleteUser, setPermissions };
+// Admin Classroom Management Functions
+
+// Get all classrooms
+const getAllClassrooms = async (req, res) => {
+  try {
+    const classrooms = await Classroom.find()
+      .populate('teacher', 'name email')
+      .populate('students', 'name email rollNumber department batch')
+      .sort({ createdAt: -1 });
+
+    res.json(classrooms);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Create classroom (admin can assign teacher)
+const createClassroom = async (req, res) => {
+  try {
+    const { name, description, section, department, teacherId } = req.body;
+
+    if (!name || !section || !department || !teacherId) {
+      return res.status(400).json({ message: 'Name, section, department, and teacher are required' });
+    }
+
+    // Verify teacher exists and is a teacher
+    const teacher = await User.findById(teacherId);
+    if (!teacher || teacher.role !== 'teacher') {
+      return res.status(400).json({ message: 'Invalid teacher ID' });
+    }
+
+    const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+
+    const classroom = new Classroom({
+      name,
+      description,
+      section,
+      department,
+      teacher: teacherId,
+      code
+    });
+
+    await classroom.save();
+    await classroom.populate('teacher', 'name email');
+    await classroom.populate('students', 'name email rollNumber');
+
+    res.status(201).json({
+      message: 'Classroom created successfully',
+      classroom
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update classroom (admin can change teacher)
+const updateClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, section, department, teacherId } = req.body;
+
+    const classroom = await Classroom.findById(id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+
+    // If teacherId is provided, verify it's a valid teacher
+    if (teacherId) {
+      const teacher = await User.findById(teacherId);
+      if (!teacher || teacher.role !== 'teacher') {
+        return res.status(400).json({ message: 'Invalid teacher ID' });
+      }
+      classroom.teacher = teacherId;
+    }
+
+    // Update other fields
+    if (name) classroom.name = name;
+    if (description !== undefined) classroom.description = description;
+    if (section) classroom.section = section;
+    if (department) classroom.department = department;
+
+    await classroom.save();
+    await classroom.populate('teacher', 'name email');
+    await classroom.populate('students', 'name email rollNumber');
+
+    res.status(200).json({
+      message: 'Classroom updated successfully',
+      classroom
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete classroom
+const deleteClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const classroom = await Classroom.findByIdAndDelete(id);
+
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+
+    res.json({ message: 'Classroom deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Add student to classroom
+const addStudentToClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { studentId } = req.body;
+
+    if (!studentId) {
+      return res.status(400).json({ message: 'Student ID is required' });
+    }
+
+    const classroom = await Classroom.findById(id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+
+    const student = await User.findById(studentId);
+    if (!student || student.role !== 'student') {
+      return res.status(400).json({ message: 'Invalid student ID' });
+    }
+
+    if (classroom.students.includes(studentId)) {
+      return res.status(400).json({ message: 'Student already in classroom' });
+    }
+
+    classroom.students.push(studentId);
+    await classroom.save();
+    await classroom.populate('teacher', 'name email');
+    await classroom.populate('students', 'name email rollNumber department batch');
+
+    res.status(200).json({
+      message: 'Student added to classroom',
+      classroom
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Remove student from classroom
+const removeStudentFromClassroom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { studentId } = req.body;
+
+    if (!studentId) {
+      return res.status(400).json({ message: 'Student ID is required' });
+    }
+
+    const classroom = await Classroom.findById(id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+
+    classroom.students = classroom.students.filter(
+      id => id.toString() !== studentId
+    );
+    await classroom.save();
+    await classroom.populate('teacher', 'name email');
+    await classroom.populate('students', 'name email rollNumber department batch');
+
+    res.status(200).json({
+      message: 'Student removed from classroom',
+      classroom
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  getUsers,
+  addUser,
+  deleteUser,
+  setPermissions,
+  getAllClassrooms,
+  createClassroom,
+  updateClassroom,
+  deleteClassroom,
+  addStudentToClassroom,
+  removeStudentFromClassroom
+};
 

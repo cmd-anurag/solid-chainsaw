@@ -178,18 +178,119 @@ const getAcademicAnalytics = async (req, res) => {
           _id: '$studentInfo.department',
           count: { $sum: 1 },
           avgSGPA: { $avg: '$sgpa' },
+          maxSGPA: { $max: '$sgpa' },
+          minSGPA: { $min: '$sgpa' },
         },
       },
+      { $sort: { avgSGPA: -1 } },
     ]);
+
+    // Performance by batch
+    const byBatch = await AcademicRecord.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'student',
+          foreignField: '_id',
+          as: 'studentInfo',
+        },
+      },
+      { $unwind: '$studentInfo' },
+      {
+        $match: { 'studentInfo.batch': { $exists: true, $ne: null } },
+      },
+      {
+        $group: {
+          _id: '$studentInfo.batch',
+          count: { $sum: 1 },
+          avgSGPA: { $avg: '$sgpa' },
+          maxSGPA: { $max: '$sgpa' },
+          minSGPA: { $min: '$sgpa' },
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+
+    // Calculate CGPA for each student
+    const studentCGPA = {};
+    records.forEach((record) => {
+      const studentId = record.student._id.toString();
+      if (!studentCGPA[studentId]) {
+        studentCGPA[studentId] = [];
+      }
+      studentCGPA[studentId].push(record);
+    });
+
+    const cgpaStats = Object.values(studentCGPA).map((studentRecords) => {
+      const sortedRecords = studentRecords.sort((a, b) => a.semester - b.semester);
+      const cgpa = calcCGPA(sortedRecords);
+      return {
+        cgpa,
+        semesterCount: sortedRecords.length,
+        latestSGPA: sortedRecords[sortedRecords.length - 1]?.sgpa || 0,
+      };
+    });
+
+    const avgCGPA = cgpaStats.length > 0
+      ? cgpaStats.reduce((sum, s) => sum + s.cgpa, 0) / cgpaStats.length
+      : 0;
+
+    const cgpaDistribution = {
+      excellent: cgpaStats.filter((s) => s.cgpa >= 9).length,
+      good: cgpaStats.filter((s) => s.cgpa >= 8 && s.cgpa < 9).length,
+      average: cgpaStats.filter((s) => s.cgpa >= 7 && s.cgpa < 8).length,
+      belowAverage: cgpaStats.filter((s) => s.cgpa < 7).length,
+    };
+
+    // Performance trends over time (by month)
+    const byMonth = await AcademicRecord.aggregate([
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m', date: '$createdAt' },
+          },
+          count: { $sum: 1 },
+          avgSGPA: { $avg: '$sgpa' },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 12 },
+    ]);
+
+    // Top performing students (by CGPA)
+    const topStudents = Object.entries(studentCGPA)
+      .map(([studentId, studentRecords]) => {
+        const sortedRecords = studentRecords.sort((a, b) => a.semester - b.semester);
+        const cgpa = calcCGPA(sortedRecords);
+        // Get student info from the first record (all records have same student)
+        const student = studentRecords[0]?.student || {};
+        return {
+          studentId,
+          name: student.name || 'Unknown',
+          department: student.department || 'N/A',
+          batch: student.batch || 'N/A',
+          cgpa: Math.round(cgpa * 100) / 100,
+          semesterCount: sortedRecords.length,
+        };
+      })
+      .filter((s) => s.cgpa > 0) // Only include students with valid CGPA
+      .sort((a, b) => b.cgpa - a.cgpa)
+      .slice(0, 10);
 
     res.json({
       overall: {
         totalRecords: records.length,
+        totalStudents: Object.keys(studentCGPA).length,
         avgSGPA: Math.round(avgSGPA * 100) / 100,
+        avgCGPA: Math.round(avgCGPA * 100) / 100,
         distribution,
+        cgpaDistribution,
       },
       bySemester,
       byDepartment,
+      byBatch,
+      byMonth,
+      topStudents,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

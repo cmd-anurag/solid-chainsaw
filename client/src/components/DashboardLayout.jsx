@@ -19,6 +19,7 @@ const menuConfig = {
     { label: 'Overview', to: '/admin' },
     { label: 'Analytics', to: '/admin/analytics' },
     { label: 'Manage Users', to: '/admin/users' },
+    { label: 'Manage Classrooms', to: '/admin/classrooms' },
   ],
 };
 
