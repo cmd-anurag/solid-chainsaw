@@ -44,8 +44,8 @@ MERNproject
 Env (server/.env):
 ```
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/cdstar
-JWT_SECRET=supersecretkey
+MONGO_URI=
+JWT_SECRET=
 ```
 
 Backend run:
